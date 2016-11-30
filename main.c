@@ -1,29 +1,5 @@
-#include <stdio.h>
 #include "board.h"
-
-void flushBuffer() {
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF) { }
-}
-
-void createPlayers(char players[2][21]) {
-    for (int i = 0; i < 2; ++i) {
-        printf("Enter name player%d (max 20 chars): ", i);
-        scanf("%20s", players[i]);  // Read max 10 chars
-        flushBuffer();
-    }
-    printf("\n\n");
-}
-
-void playGame(Board board, char players[2][21]) {
-    char field[2];
-    for (int i = 0; i < 2; ++i) {
-        printBoard(&board);
-        printf("Player %s, enter field: ", players[i]);
-        scanf("%2s", field);
-        flushBuffer();
-    }
-}
+#include "game.h"
 
 int main(void) {
     // Create players
