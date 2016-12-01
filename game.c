@@ -11,29 +11,96 @@ void createPlayers(char players[2][21]) {
     }
 }
 
-void playGame(Board board, char players[2][21]) {
-    char fieldX;
+void playGame(Board *board, char players[2][21]) {
+    int fieldX;
     int fieldY;
 
     for (int i = 0; i < 2; ++i) {
         printf("\n");
-        printBoard(&board);
+        printBoard(board);
 
-        // Get field input from user
-        getFieldInput(&fieldX, &fieldY, players[i]);
+        // Get valid field input from user
+        getNextMove(board, &fieldX, &fieldY, players[0], WHITE);
+        getNextMove(board, &fieldX, &fieldY, players[1], BLACK);
         flushBuffer();
     }
 }
 
-void getFieldInput(char *fieldX, int *fieldY, char player[]) {
-    printf("\nPlayer %s, enter field (1 char & 1 int): ", player);
-    while (scanf(" %1c %1i", fieldX, fieldY) != 2 ||
-           tolower(*fieldX) < 'a' || tolower(*fieldX) > 'h' ||
+void getNextMove(Board *board, int *fieldX, int *fieldY, char player[], Field playerF) {
+    int legalMove = 0;
+    while (!legalMove) {
+        getFieldInput(fieldX, fieldY, player);
+        legalMove = isMoveLegal(board, playerF, *fieldX, *fieldY);
+        printf("%d", legalMove);
+        if (!legalMove)
+            printf("Invalid move!");
+    }
+}
+
+void getFieldInput(int *fieldX, int *fieldY, char player[]) {
+    char fieldXIn;
+
+    // Get a char and an int for field input (row and column)
+    printf("\nPlayer %s, enter field: ", player);
+    while (scanf(" %1c %1i", &fieldXIn, fieldY) != 2 ||
+           tolower(fieldXIn) < 'a' || tolower(fieldXIn) > 'h' ||
            *fieldY < 1 || *fieldY > 8) {
         printf("Incorrect input. Letter (a-h) and number (1-8) (ex: b3): ");
         flushBuffer();
     }
+
+    // Make fieldX and fieldY match board array bounds
+    *fieldX = tolower(fieldXIn) - 'a';
+    *fieldY = *fieldY - 1;
 }
+
+int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
+    Field otherPlayerF;
+    if (playerF == BLACK)
+        otherPlayerF = WHITE;
+    else
+        otherPlayerF = BLACK;
+
+    // Moving to already taken spot is illegal
+    if (board->fields[fieldX][fieldY] != EMPTY)
+        return 0;
+
+    // Check if valid in row to left
+    if (fieldX-1 > 0 && board->fields[fieldX-1][fieldY] == otherPlayerF) {
+        for (int i = fieldX-1; i >= 0; i--) {
+            if (board->fields[i][fieldY] == playerF)
+                return 1;
+        }
+    }
+
+    // Check if valid in row to right
+    if (fieldX+1 < BOARD_SIZE && board->fields[fieldX+1][fieldY] == otherPlayerF) {
+        for (int i = fieldX+1; i < BOARD_SIZE; i++) {
+            if (board->fields[i][fieldY] == playerF)
+                return 2;
+        }
+    }
+
+    // Check if valid in column down
+    if (fieldY-1 > 0 && board->fields[fieldX][fieldY-1] == otherPlayerF) {
+        for (int i = fieldY-1; i >= 0; i--) {
+            if (board->fields[fieldX][i] == playerF)
+                return 3;
+        }
+    }
+
+    // Check if valid in column up
+    if (fieldY-1 < BOARD_SIZE && board->fields[fieldX][fieldY+1] == otherPlayerF) {
+        for (int i = fieldY+1; i < BOARD_SIZE; i++) {
+            if (board->fields[fieldX][i] == playerF)
+                return 4;
+        }
+    }
+
+    // Moving here is illegal
+    return 0;
+}
+
 
 void flushBuffer() {
     int c;

@@ -11,5 +11,5 @@ int main(void) {
     initBoard(&currentBoard);
 
     // Start the game
-    playGame(currentBoard, players);
+    playGame(&currentBoard, players);
 }
