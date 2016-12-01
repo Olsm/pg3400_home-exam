@@ -54,6 +54,7 @@ void getFieldInput(int *fieldX, int *fieldY, char player[]) {
     *fieldY = *fieldY - 1;
 }
 
+// TODO: This should be one check repeated 8 times
 int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
     Field otherPlayerF;
     if (playerF == BLACK)
@@ -94,6 +95,38 @@ int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
         for (int i = fieldY+1; i < BOARD_SIZE; i++) {
             if (board->fields[fieldX][i] == playerF)
                 return 4;
+        }
+    }
+
+    // Check if valid in diagonal up left
+    if (fieldX-1 > 0 && fieldY-1 > 0 && board->fields[fieldX-1][fieldY-1] == otherPlayerF) {
+        for (int i = 1; i < fieldX-i > 0 && fieldY-i > 0; i++) {
+            if (board->fields[fieldX - i][fieldY - i] == playerF)
+                return 5;
+        }
+    }
+
+    // Check if valid in diagonal up right
+    if (fieldX+1 < BOARD_SIZE && fieldY+1 > 0 && board->fields[fieldX+1][fieldY-1] == otherPlayerF) {
+        for (int i = 1; i < fieldX+i < BOARD_SIZE && fieldY+i > 0; i++) {
+            if (board->fields[fieldX + i][fieldY - i] == playerF)
+                return 6;
+        }
+    }
+
+    // Check if valid in diagonal down left
+    if (fieldX-1 > 0 && fieldY+1 < BOARD_SIZE && board->fields[fieldX-1][fieldY+1] == otherPlayerF) {
+        for (int i = 1; fieldX-i > 0 && fieldY+i < BOARD_SIZE; i++) {
+            if (board->fields[fieldX - i][fieldY + i] == playerF)
+                return 7;
+        }
+    }
+
+    // Check if valid in diagonal down right
+    if (fieldX+1 < BOARD_SIZE && fieldY+1 > 0 && board->fields[fieldX+1][fieldY+1] == otherPlayerF) {
+        for (int i = 1; fieldX+i < BOARD_SIZE && fieldY+i > 0; i++) {
+            if (board->fields[fieldX + i][fieldY + i] == playerF)
+                return 8;
         }
     }
 
