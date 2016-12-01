@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include "board.h"
 #include "game.h"
 
@@ -12,29 +13,71 @@ void createPlayers(char players[2][21]) {
 }
 
 void playGame(Board *board, char players[2][21]) {
-    int fieldX;
-    int fieldY;
+    int fieldX, fieldY, moveDir;
+    Field playerFields[2] = {WHITE, BLACK};
 
     for (int i = 0; i < 2; ++i) {
         printf("\n");
         printBoard(board);
 
         // Get valid field input from user
-        getNextMove(board, &fieldX, &fieldY, players[0], WHITE);
-        getNextMove(board, &fieldX, &fieldY, players[1], BLACK);
+        moveDir = getNextMove(board, &fieldX, &fieldY, players[i], playerFields[i]);
+        makeMove(board, playerFields[i], fieldX, fieldY, moveDir);
         flushBuffer();
     }
 }
 
-void getNextMove(Board *board, int *fieldX, int *fieldY, char player[], Field playerF) {
+int getNextMove(Board *board, int *fieldX, int *fieldY, char player[], Field playerF) {
     int legalMove = 0;
     while (!legalMove) {
         getFieldInput(fieldX, fieldY, player);
         legalMove = isMoveLegal(board, playerF, *fieldX, *fieldY);
-        printf("%d", legalMove);
         if (!legalMove)
             printf("Invalid move!");
     }
+    return legalMove;
+}
+
+void makeMove(Board *board, enum Field playerF, int x, int y, int moveDir) {
+    int xDelta = 0, yDelta = 0;
+
+    // Chose which way to swap fields
+    switch (moveDir) {
+        case 1: // row left
+            xDelta = -1;
+            break;
+        case 2: // row right
+            xDelta = 1;
+            break;
+        case 3: // col down
+            yDelta = -1;
+            break;
+        case 4: // col up
+            yDelta = 1;
+            break;
+        case 5: // diag left up
+            xDelta = -1;
+            yDelta = -1;
+            break;
+        case 6: // diag right up
+            xDelta = 1;
+            yDelta = -1;
+            break;
+        case 7: // diag left down
+            xDelta = -1;
+            yDelta = 1;
+            break;
+        case 8: // diag right down
+            xDelta = 1;
+            yDelta = 1;
+            break;
+        default:
+            exit(-1);
+    }
+
+    // Add field and swap opponent fields
+    do { board->fields[x][y] = playerF;
+    } while (board->fields[x += xDelta][y += yDelta] != playerF);
 }
 
 void getFieldInput(int *fieldX, int *fieldY, char player[]) {

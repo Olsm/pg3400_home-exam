@@ -7,4 +7,5 @@ void createPlayers(char players[2][21]);
 void playGame(Board *board, char players[2][21]);
 void getFieldInput(int *fieldX, int *fieldY, char player[]);
 int isMoveLegal(Board *board, Field playerF, int fieldX, int posY);
-void getNextMove(Board *board, int *fieldX, int *fieldY, char player[], Field playerF);
+int getNextMove(Board *board, int *fieldX, int *fieldY, char player[], Field playerF);
+void makeMove(Board *pBoard, enum Field field, int x, int y, int moveDir);
