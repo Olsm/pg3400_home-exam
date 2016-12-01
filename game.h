@@ -5,3 +5,4 @@
 void flushBuffer();
 void createPlayers(char players[2][21]);
 void playGame(Board board, char players[2][21]);
+void getFieldInput(char *fieldX, int *fieldY, char player[]);
