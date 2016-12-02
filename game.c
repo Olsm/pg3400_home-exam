@@ -95,7 +95,9 @@ void makeMove(Board *board, enum Field playerF, int x, int y, int moveDir) {
 
     // Add field and swap opponent fields
     do { board->fields[x][y] = playerF;
-    } while (board->fields[x += xDelta][y += yDelta] != playerF);
+    } while ((x += xDelta) > 0 && x < BOARD_SIZE &&
+            (y += yDelta) > 0 && y < BOARD_SIZE &&
+            board->fields[x][y] != playerF);
 }
 
 void getFieldInput(int *fieldX, int *fieldY, char player[]) {
@@ -115,97 +117,60 @@ void getFieldInput(int *fieldX, int *fieldY, char player[]) {
     *fieldY = *fieldY - 1;
 }
 
-// TODO: This should be one check repeated 8 times
-int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
-    Field otherPlayerF;
-    if (playerF == BLACK)
-        otherPlayerF = WHITE;
-    else
-        otherPlayerF = BLACK;
+int isMoveLegalByDelta(Board *board, Field playerF, int fieldX, int fieldY, int deltaX, int deltaY) {
+    // Previous field must be of opponent
+    if (playerF == WHITE &&
+            board->fields[fieldX+deltaX][fieldY+deltaY] != BLACK)
+        return 0;
+    if (playerF == BLACK &&
+            board->fields[fieldX+deltaX][fieldY+deltaY] != WHITE)
+        return 0;
 
+    // Field + delta must be more than 0 and less than board size
+    if (!(fieldX+deltaX > 0 && fieldX+deltaX < BOARD_SIZE) ||
+            !(fieldY+deltaY > 0 && fieldY+deltaY < BOARD_SIZE))
+        return 0;
+
+    // Check if any of the next fields is the player field
+    for (int i = fieldX + deltaX, j = fieldY + deltaY;
+            i > 0 && i < BOARD_SIZE && j > 0 && j < BOARD_SIZE;
+            i = i + deltaX, j = j + deltaY) {
+
+        // If empty comes before a playerfield move is illegal
+        if (board->fields[i][j] == EMPTY)
+            return 0;
+
+        // Legal move
+        if (board->fields[i][j] == playerF)
+            return 1;
+    }
+
+    // Move was not legal
+    return 0;
+}
+
+int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
     // Moving to already taken spot is illegal
     if (board->fields[fieldX][fieldY] != EMPTY)
         return 0;
 
-    // Check if valid in row to left
-    if (fieldX-1 > 0 && board->fields[fieldX-1][fieldY] == otherPlayerF) {
-        for (int i = fieldX-1; i >= 0; i--) {
-            if (board->fields[i][fieldY] == EMPTY)
-                break;
-            if (board->fields[i][fieldY] == playerF)
-                return 1;
-        }
-    }
-
-    // Check if valid in row to right
-    if (fieldX+1 < BOARD_SIZE && board->fields[fieldX+1][fieldY] == otherPlayerF) {
-        for (int i = fieldX+1; i < BOARD_SIZE; i++) {
-            if (board->fields[i][fieldY] == EMPTY)
-                break;
-            if (board->fields[i][fieldY] == playerF)
-                return 2;
-        }
-    }
-
-    // Check if valid in column down
-    if (fieldY-1 > 0 && board->fields[fieldX][fieldY-1] == otherPlayerF) {
-        for (int i = fieldY-1; i >= 0; i--) {
-            if (board->fields[fieldX][i] == EMPTY)
-                break;
-            if (board->fields[fieldX][i] == playerF)
-                return 3;
-        }
-    }
-
-    // Check if valid in column up
-    if (fieldY-1 < BOARD_SIZE && board->fields[fieldX][fieldY+1] == otherPlayerF) {
-        for (int i = fieldY+1; i < BOARD_SIZE; i++) {
-            if (board->fields[fieldX][i] == EMPTY)
-                break;
-            if (board->fields[fieldX][i] == playerF)
-                return 4;
-        }
-    }
-
-    // Check if valid in diagonal up left
-    if (fieldX-1 > 0 && fieldY-1 > 0 && board->fields[fieldX-1][fieldY-1] == otherPlayerF) {
-        for (int i = 1; fieldX-i > 0 && fieldY-i > 0; i++) {
-            if (board->fields[fieldX - i][fieldY - i] == EMPTY)
-                break;
-            if (board->fields[fieldX - i][fieldY - i] == playerF)
-                return 5;
-        }
-    }
-
-    // Check if valid in diagonal up right
-    if (fieldX+1 < BOARD_SIZE && fieldY+1 > 0 && board->fields[fieldX+1][fieldY-1] == otherPlayerF) {
-        for (int i = 1; fieldX+i < BOARD_SIZE && fieldY+i > 0; i++) {
-            if (board->fields[fieldX + i][fieldY - i] == EMPTY)
-                break;
-            if (board->fields[fieldX + i][fieldY - i] == playerF)
-                return 6;
-        }
-    }
-
-    // Check if valid in diagonal down left
-    if (fieldX-1 > 0 && fieldY+1 < BOARD_SIZE && board->fields[fieldX-1][fieldY+1] == otherPlayerF) {
-        for (int i = 1; fieldX-i > 0 && fieldY+i < BOARD_SIZE; i++) {
-            if (board->fields[fieldX - i][fieldY + i] == EMPTY)
-                break;
-            if (board->fields[fieldX - i][fieldY + i] == playerF)
-                return 7;
-        }
-    }
-
-    // Check if valid in diagonal down right
-    if (fieldX+1 < BOARD_SIZE && fieldY+1 > 0 && board->fields[fieldX+1][fieldY+1] == otherPlayerF) {
-        for (int i = 1; fieldX+i < BOARD_SIZE && fieldY+i > 0; i++) {
-            if (board->fields[fieldX + i][fieldY + i] == EMPTY)
-                break;
-            if (board->fields[fieldX + i][fieldY + i] == playerF)
-                return 8;
-        }
-    }
+    // Check if move is legal in any direction
+    if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, -1, 0))
+        return 1;
+    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 1, 0))
+        return 2;
+    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 0, -1))
+        return 3;
+    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 0, 1))
+        return 4;
+    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, -1, -1))
+        return 5;
+    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 1, -1))
+        return 6;
+    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, -1, 1))
+        return 7;
+    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 1, 1))
+        return 8;
 
     // Moving here is illegal
     return 0;

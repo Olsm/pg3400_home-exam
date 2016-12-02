@@ -6,6 +6,7 @@ void flushBuffer();
 void createPlayers(char players[2][21]);
 void playGame(Board *board, char players[2][21], FILE *file);
 void getFieldInput(int *fieldX, int *fieldY, char player[]);
+int isMoveLegalByDelta(Board *board, Field playerF, int fieldX, int fieldY, int deltaX, int deltaY);
 int isMoveLegal(Board *board, Field playerF, int fieldX, int posY);
 int getNextMove(Board *board, int *fieldX, int *fieldY, char player[], Field playerF);
 void makeMove(Board *pBoard, enum Field field, int x, int y, int moveDir);
