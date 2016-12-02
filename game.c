@@ -12,7 +12,7 @@ void createPlayers(char players[2][21]) {
     }
 }
 
-void playGame(Board *board, char players[2][21]) {
+void playGame(Board *board, char players[2][21], FILE *file) {
     int gameOver = 0;
     int fieldX, fieldY, moveDir;
     Field playerFields[2] = {WHITE, BLACK};
@@ -27,6 +27,10 @@ void playGame(Board *board, char players[2][21]) {
                 moveDir = getNextMove(board, &fieldX, &fieldY, players[i], playerFields[i]);
                 makeMove(board, playerFields[i], fieldX, fieldY, moveDir);
                 flushBuffer();
+
+                // Save the move to file
+                fprintf(file, "%s moved to %c%d\n", players[i], fieldX+'a', fieldY+1);
+                fflush(file);
             }
 
             // Check if game is over
