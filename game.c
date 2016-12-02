@@ -20,7 +20,7 @@ void playGame(Board *board, char players[2][21]) {
     while (!gameOver) {
         for (int i = 0; i < 2; ++i) {
             if (!isGameOver(board, playerFields[i])) {
-                printf("\n");
+                printf("\n\n");
                 printBoard(board);
 
                 // Get next move input from user and make the move
@@ -33,6 +33,12 @@ void playGame(Board *board, char players[2][21]) {
             gameOver = isGameOver(board, playerFields[0]) && isGameOver(board, playerFields[1]);
         }
     }
+
+    endGame(board, players);
+
+    printf("\n\nPress a key to exit\n");
+    getchar();
+    exit(0);
 }
 
 int getNextMove(Board *board, int *fieldX, int *fieldY, char player[], Field playerF) {
@@ -196,6 +202,27 @@ int isGameOver(Board *board, Field playerF) {
 
     // There was no legal moves left so game is over
     return 1;
+}
+
+void endGame(Board *board, char players[2][21]) {
+    printBoard(board);
+    int white = 0, black = 0;
+
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            if (board->fields[i][j] == WHITE)
+                white++;
+            else if (board->fields[i][j] == BLACK)
+                black++;
+        }
+    }
+
+    if (white > black)
+        printf("Player %s won the game", players[0]);
+    else if (black > white)
+        printf("Player %s won the game", players[1]);
+    else
+        printf("There is no winner, game tie");
 }
 
 void flushBuffer() {
