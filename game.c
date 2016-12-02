@@ -126,6 +126,8 @@ int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
     // Check if valid in row to left
     if (fieldX-1 > 0 && board->fields[fieldX-1][fieldY] == otherPlayerF) {
         for (int i = fieldX-1; i >= 0; i--) {
+            if (board->fields[i][fieldY] == EMPTY)
+                break;
             if (board->fields[i][fieldY] == playerF)
                 return 1;
         }
@@ -134,6 +136,8 @@ int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
     // Check if valid in row to right
     if (fieldX+1 < BOARD_SIZE && board->fields[fieldX+1][fieldY] == otherPlayerF) {
         for (int i = fieldX+1; i < BOARD_SIZE; i++) {
+            if (board->fields[i][fieldY] == EMPTY)
+                break;
             if (board->fields[i][fieldY] == playerF)
                 return 2;
         }
@@ -142,6 +146,8 @@ int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
     // Check if valid in column down
     if (fieldY-1 > 0 && board->fields[fieldX][fieldY-1] == otherPlayerF) {
         for (int i = fieldY-1; i >= 0; i--) {
+            if (board->fields[fieldX][i] == EMPTY)
+                break;
             if (board->fields[fieldX][i] == playerF)
                 return 3;
         }
@@ -150,6 +156,8 @@ int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
     // Check if valid in column up
     if (fieldY-1 < BOARD_SIZE && board->fields[fieldX][fieldY+1] == otherPlayerF) {
         for (int i = fieldY+1; i < BOARD_SIZE; i++) {
+            if (board->fields[fieldX][i] == EMPTY)
+                break;
             if (board->fields[fieldX][i] == playerF)
                 return 4;
         }
@@ -158,6 +166,8 @@ int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
     // Check if valid in diagonal up left
     if (fieldX-1 > 0 && fieldY-1 > 0 && board->fields[fieldX-1][fieldY-1] == otherPlayerF) {
         for (int i = 1; fieldX-i > 0 && fieldY-i > 0; i++) {
+            if (board->fields[fieldX - i][fieldY - i] == EMPTY)
+                break;
             if (board->fields[fieldX - i][fieldY - i] == playerF)
                 return 5;
         }
@@ -166,6 +176,8 @@ int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
     // Check if valid in diagonal up right
     if (fieldX+1 < BOARD_SIZE && fieldY+1 > 0 && board->fields[fieldX+1][fieldY-1] == otherPlayerF) {
         for (int i = 1; fieldX+i < BOARD_SIZE && fieldY+i > 0; i++) {
+            if (board->fields[fieldX + i][fieldY - i] == EMPTY)
+                break;
             if (board->fields[fieldX + i][fieldY - i] == playerF)
                 return 6;
         }
@@ -174,6 +186,8 @@ int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
     // Check if valid in diagonal down left
     if (fieldX-1 > 0 && fieldY+1 < BOARD_SIZE && board->fields[fieldX-1][fieldY+1] == otherPlayerF) {
         for (int i = 1; fieldX-i > 0 && fieldY+i < BOARD_SIZE; i++) {
+            if (board->fields[fieldX - i][fieldY + i] == EMPTY)
+                break;
             if (board->fields[fieldX - i][fieldY + i] == playerF)
                 return 7;
         }
@@ -182,6 +196,8 @@ int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
     // Check if valid in diagonal down right
     if (fieldX+1 < BOARD_SIZE && fieldY+1 > 0 && board->fields[fieldX+1][fieldY+1] == otherPlayerF) {
         for (int i = 1; fieldX+i < BOARD_SIZE && fieldY+i > 0; i++) {
+            if (board->fields[fieldX + i][fieldY + i] == EMPTY)
+                break;
             if (board->fields[fieldX + i][fieldY + i] == playerF)
                 return 8;
         }
@@ -218,11 +234,11 @@ void endGame(Board *board, char players[2][21]) {
     }
 
     if (white > black)
-        printf("Player %s won the game", players[0]);
+        printf("\nPlayer %s won the game", players[0]);
     else if (black > white)
-        printf("Player %s won the game", players[1]);
+        printf("\nPlayer %s won the game", players[1]);
     else
-        printf("There is no winner, game tie");
+        printf("\nThere is no winner, game tie");
 }
 
 void flushBuffer() {
