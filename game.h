@@ -9,3 +9,4 @@ void getFieldInput(int *fieldX, int *fieldY, char player[]);
 int isMoveLegal(Board *board, Field playerF, int fieldX, int posY);
 int getNextMove(Board *board, int *fieldX, int *fieldY, char player[], Field playerF);
 void makeMove(Board *pBoard, enum Field field, int x, int y, int moveDir);
+int isGameOver(Board *board, Field playerF);

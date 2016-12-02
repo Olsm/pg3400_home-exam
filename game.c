@@ -13,17 +13,25 @@ void createPlayers(char players[2][21]) {
 }
 
 void playGame(Board *board, char players[2][21]) {
+    int gameOver = 0;
     int fieldX, fieldY, moveDir;
     Field playerFields[2] = {WHITE, BLACK};
 
-    for (int i = 0; i < 2; ++i) {
-        printf("\n");
-        printBoard(board);
+    while (!gameOver) {
+        for (int i = 0; i < 2; ++i) {
+            if (!isGameOver(board, playerFields[i])) {
+                printf("\n");
+                printBoard(board);
 
-        // Get valid field input from user
-        moveDir = getNextMove(board, &fieldX, &fieldY, players[i], playerFields[i]);
-        makeMove(board, playerFields[i], fieldX, fieldY, moveDir);
-        flushBuffer();
+                // Get next move input from user and make the move
+                moveDir = getNextMove(board, &fieldX, &fieldY, players[i], playerFields[i]);
+                makeMove(board, playerFields[i], fieldX, fieldY, moveDir);
+                flushBuffer();
+            }
+
+            // Check if game is over
+            gameOver = isGameOver(board, playerFields[0]) && isGameOver(board, playerFields[1]);
+        }
     }
 }
 
@@ -143,7 +151,7 @@ int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
 
     // Check if valid in diagonal up left
     if (fieldX-1 > 0 && fieldY-1 > 0 && board->fields[fieldX-1][fieldY-1] == otherPlayerF) {
-        for (int i = 1; i < fieldX-i > 0 && fieldY-i > 0; i++) {
+        for (int i = 1; fieldX-i > 0 && fieldY-i > 0; i++) {
             if (board->fields[fieldX - i][fieldY - i] == playerF)
                 return 5;
         }
@@ -151,7 +159,7 @@ int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
 
     // Check if valid in diagonal up right
     if (fieldX+1 < BOARD_SIZE && fieldY+1 > 0 && board->fields[fieldX+1][fieldY-1] == otherPlayerF) {
-        for (int i = 1; i < fieldX+i < BOARD_SIZE && fieldY+i > 0; i++) {
+        for (int i = 1; fieldX+i < BOARD_SIZE && fieldY+i > 0; i++) {
             if (board->fields[fieldX + i][fieldY - i] == playerF)
                 return 6;
         }
@@ -177,6 +185,18 @@ int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
     return 0;
 }
 
+int isGameOver(Board *board, Field playerF) {
+    // Check if there is any legal moves for the player
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            if (isMoveLegal(board, playerF, i, j))
+                return 0;
+        }
+    }
+
+    // There was no legal moves left so game is over
+    return 1;
+}
 
 void flushBuffer() {
     int c;
