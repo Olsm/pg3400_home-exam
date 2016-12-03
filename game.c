@@ -14,7 +14,8 @@ void createPlayers(char players[2][21]) {
 
 void playGame(Board *board, char players[2][21], FILE *file) {
     int gameOver = 0;
-    int fieldX, fieldY, moveDir;
+    int fieldX, fieldY;
+    int legalMoves[8][2];
     Field playerFields[2] = {WHITE, BLACK};
 
     while (!gameOver) {
@@ -24,8 +25,8 @@ void playGame(Board *board, char players[2][21], FILE *file) {
                 printBoard(board);
 
                 // Get next move input from user and make the move
-                moveDir = getNextMove(board, &fieldX, &fieldY, players[i], playerFields[i]);
-                makeMove(board, playerFields[i], fieldX, fieldY, moveDir);
+                getNextMove(board, legalMoves, &fieldX, &fieldY, players[i], playerFields[i]);
+                makeMove(board, legalMoves, playerFields[i], fieldX, fieldY);
                 flushBuffer();
 
                 // Save the move to file
@@ -45,59 +46,33 @@ void playGame(Board *board, char players[2][21], FILE *file) {
     exit(0);
 }
 
-int getNextMove(Board *board, int *fieldX, int *fieldY, char player[], Field playerF) {
+int getNextMove(Board *board, int legalMoves[8][2], int *fieldX, int *fieldY, char player[], Field playerF) {
     int legalMove = 0;
     while (!legalMove) {
         getFieldInput(fieldX, fieldY, player);
-        legalMove = isMoveLegal(board, playerF, *fieldX, *fieldY);
+        legalMove = isMoveLegal(board, legalMoves, playerF, *fieldX, *fieldY);
         if (!legalMove)
             printf("Invalid move!");
     }
     return legalMove;
 }
 
-void makeMove(Board *board, enum Field playerF, int x, int y, int moveDir) {
-    int xDelta = 0, yDelta = 0;
+void makeMove(Board *board, int legalMoves[8][2], enum Field playerF, int fieldX, int fieldY) {
+    int xDelta = 0, yDelta = 0, x, y;
 
-    // Chose which way to swap fields
-    switch (moveDir) {
-        case 1: // row left
-            xDelta = -1;
-            break;
-        case 2: // row right
-            xDelta = 1;
-            break;
-        case 3: // col down
-            yDelta = -1;
-            break;
-        case 4: // col up
-            yDelta = 1;
-            break;
-        case 5: // diag left up
-            xDelta = -1;
-            yDelta = -1;
-            break;
-        case 6: // diag right up
-            xDelta = 1;
-            yDelta = -1;
-            break;
-        case 7: // diag left down
-            xDelta = -1;
-            yDelta = 1;
-            break;
-        case 8: // diag right down
-            xDelta = 1;
-            yDelta = 1;
-            break;
-        default:
-            exit(-1);
+    // swap fields in all legal move directions
+    int i = 0;
+    while (legalMoves[i][0] != 0 || legalMoves[i][1] != 0) {
+        x = fieldX, y = fieldY;
+        xDelta = legalMoves[i][0], yDelta = legalMoves[i][1];
+
+        // Add field and swap opponent fields
+        do { board->fields[x][y] = playerF;
+        } while ((x += xDelta) > 0 && x < BOARD_SIZE &&
+                 (y += yDelta) > 0 && y < BOARD_SIZE &&
+                 board->fields[x][y] != playerF);
+        i++;
     }
-
-    // Add field and swap opponent fields
-    do { board->fields[x][y] = playerF;
-    } while ((x += xDelta) > 0 && x < BOARD_SIZE &&
-            (y += yDelta) > 0 && y < BOARD_SIZE &&
-            board->fields[x][y] != playerF);
 }
 
 void getFieldInput(int *fieldX, int *fieldY, char player[]) {
@@ -127,13 +102,13 @@ int isMoveLegalByDelta(Board *board, Field playerF, int fieldX, int fieldY, int 
         return 0;
 
     // Field + delta must be more than 0 and less than board size
-    if (!(fieldX+deltaX > 0 && fieldX+deltaX < BOARD_SIZE) ||
-            !(fieldY+deltaY > 0 && fieldY+deltaY < BOARD_SIZE))
+    if (!(fieldX+deltaX >= 0 && fieldX+deltaX <= BOARD_SIZE) ||
+            !(fieldY+deltaY >= 0 && fieldY+deltaY <= BOARD_SIZE))
         return 0;
 
     // Check if any of the next fields is the player field
     for (int i = fieldX + deltaX, j = fieldY + deltaY;
-            i > 0 && i < BOARD_SIZE && j > 0 && j < BOARD_SIZE;
+            i >= 0 && i <= BOARD_SIZE && j >= 0 && j <= BOARD_SIZE;
             i = i + deltaX, j = j + deltaY) {
 
         // If empty comes before a playerfield move is illegal
@@ -149,38 +124,52 @@ int isMoveLegalByDelta(Board *board, Field playerF, int fieldX, int fieldY, int 
     return 0;
 }
 
-int isMoveLegal(Board *board, Field playerF, int fieldX, int fieldY) {
+void addLegalMove(int legalMoves[8][2], int *index, int x, int y) {
+    legalMoves[*index][0] = x;
+    legalMoves[*index][1] = y;
+    *index += 1;
+}
+
+int isMoveLegal(Board *board, int legalMoves[8][2], Field playerF, int fieldX, int fieldY) {
+    int index = 0;
+    for (int i = 0; i < 8; ++i) {
+        legalMoves[i][0] = 0;
+        legalMoves[i][1] = 0;
+    }
+
     // Moving to already taken spot is illegal
     if (board->fields[fieldX][fieldY] != EMPTY)
         return 0;
 
     // Check if move is legal in any direction
     if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, -1, 0))
-        return 1;
-    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 1, 0))
-        return 2;
-    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 0, -1))
-        return 3;
-    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 0, 1))
-        return 4;
-    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, -1, -1))
-        return 5;
-    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 1, -1))
-        return 6;
-    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, -1, 1))
-        return 7;
-    else if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 1, 1))
-        return 8;
+        addLegalMove(legalMoves, &index, -1, 0);
+    if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 1, 0))
+        addLegalMove(legalMoves, &index, 1, 0);
+    if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 0, -1))
+        addLegalMove(legalMoves, &index, 0, -1);
+    if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 0, 1))
+        addLegalMove(legalMoves, &index, 0, 1);
+    if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, -1, -1))
+        addLegalMove(legalMoves, &index, -1, -1);
+    if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 1, -1))
+        addLegalMove(legalMoves, &index, 1, -1);
+    if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, -1, 1))
+        addLegalMove(legalMoves, &index, -1, 1);
+    if (isMoveLegalByDelta(board, playerF, fieldX, fieldY, 1, 1))
+        addLegalMove(legalMoves, &index, 1, 1);
 
-    // Moving here is illegal
-    return 0;
+    // If index is > 0 there are legal moves
+    // If index is 0 there are no legal moves
+    return index;
 }
 
 int isGameOver(Board *board, Field playerF) {
+    int legalMoves[8][2];
     // Check if there is any legal moves for the player
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
-            if (isMoveLegal(board, playerF, i, j))
+            if (isMoveLegal(board, legalMoves, playerF, i, j))
                 return 0;
         }
     }
@@ -190,6 +179,7 @@ int isGameOver(Board *board, Field playerF) {
 }
 
 void endGame(Board *board, char players[2][21]) {
+    printf("\n");
     printBoard(board);
     int white = 0, black = 0;
 
